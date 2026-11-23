@@ -1,33 +1,58 @@
-"""Модуль CLI для ассемблера."""
+"""Модуль командной строки для ассемблера УВМ (Этап 2).
+
+Этот модуль отвечает за:
+1. Разбор аргументов командной строки (-i, -o, -t).
+2. Чтение исходного файла ассемблера.
+3. Запуск процесса ассемблирования и кодирования.
+4. Запись бинарного файла.
+5. Вывод статистики и байтов в режиме тестирования.
+"""
 
 import argparse
-from typing import Any
 
 from src.assembler import Assembler
+from src.encoder import Encoder
 
 
-def print_ir(instructions: list[dict[str, Any]]) -> None:
-    """Выводит промежуточное представление в формате тестов."""
-    print("Промежуточное представление (IR):")
+def print_bytes(bytecode: bytes) -> None:
+    """Выводит машинный код в шестнадцатеричном формате, как в тестах.
+
+    Пример вывода: "0x01, 0x08, 0x00, 0x00, 0x00"
+
+    Аргументы:
+        bytecode (bytes): Строка байтов для вывода.
+    """
+    print("Машинный код (hex):")
+    hex_str = ", ".join(f"0x{byte:02X}" for byte in bytecode)
+    print(hex_str)
     print("=" * 40)
-    for idx, instr in enumerate(instructions):
-        print(f"Команда {idx + 1}: {instr['mnemonic']}")
-        print(f"  Поле A (Opcode): {instr['A']}")
-        print(f"  Поле B (Operand): {instr['B']}")
-        print("-" * 40)
 
 
 def main() -> None:
-    """Точка входа CLI."""
-    parser = argparse.ArgumentParser(description="Ассемблер УВМ (Этап 1)")
-    parser.add_argument("-i", "--input", required=True, help="Путь к исходному файлу")
+    """Главная функция программы.
+
+    Управляет всем процессом: от чтения аргументов до записи файла.
+    Использует argparse для разбора флагов -i, -o, -t.
+    """
+    parser = argparse.ArgumentParser(description="Ассемблер УВМ (Этап 2)")
+    parser.add_argument(
+        "-i",
+        "--input",
+        required=True,
+        help="Путь к исходному файлу с текстом программы",
+    )
     parser.add_argument(
         "-o",
         "--output",
         required=True,
-        help="Путь к бинарному файлу (заглушка на этапе 1)",
+        help="Путь к бинарному файлу-результату",
     )
-    parser.add_argument("-t", "--test", action="store_true", help="Режим тестирования")
+    parser.add_argument(
+        "-t",
+        "--test",
+        action="store_true",
+        help="Режим тестирования: вывести байты на экран",
+    )
 
     args = parser.parse_args()
 
@@ -45,7 +70,18 @@ def main() -> None:
         print(f"Ошибка ассемблирования: {e}")
         return
 
+    encoder = Encoder()
+    try:
+        bytecode = encoder.encode(ir)
+    except Exception as e:
+        print(f"Ошибка кодирования: {e}")
+        return
+
+    with open(args.output, "wb") as f:
+        f.write(bytecode)
+
+    print(f"Успешно ассемблировано команд: {len(ir)}")
+    print(f"Размер выходного файла: {len(bytecode)} байт")
+
     if args.test:
-        print_ir(ir)
-    else:
-        print(f"Успешно прочитано {len(ir)} команд. (Бинарная генерация на Этапе 2)")
+        print_bytes(bytecode)

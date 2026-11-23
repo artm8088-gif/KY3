@@ -1,7 +1,77 @@
 [project]
 name = "ky3"
 version = "0.1.0"
-description = "Add your description here"
+description = "Ассемблер и интерпретатор УВМ (Вариант №2)"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pytest>=8.0.0", # Для тестов (Этап 1 и 2)
+    "ruff>=0.4.0",   # Линтер для проверки нарушений
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# ==========================================
+# НАСТРОЙКИ PYTEST
+# ==========================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+# ==========================================
+# НАСТРОЙКИ RUFF (Закрывают нарушения)
+# ==========================================
+[tool.ruff]
+# Правило Р2: Длина строк в Python не более 80 символов
+line-length = 80
+indent-width = 4
+
+# Исключаем системные папки из проверки
+exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    "build",
+    "dist"
+]
+
+[tool.ruff.lint]
+# Выбираем все необходимые правила
+select = [
+    "E",   # pycodestyle (Пробелы, отступы, длина строк - Правило Р2, И1)
+    "W",   # pycodestyle (Предупреждения)
+    "F",   # Pyflakes (Неиспользуемые импорты, ошибки логики)
+    "C90", # McCabe (Цикломатическая сложность - Правило Ц1)
+    "PL",  # Pylint (Общая логика, проверка аргументов и длины функций)
+    "D",   # pydocstyle (Проверка наличия docstring - Правило К1)
+    "N",   # pep8-naming (Имена переменных и функций - Правило И1)
+]
+
+# Игнорируем некоторые правила, чтобы код не был слишком перегружен
+ignore = [
+    "D203", # Конфликтует с D211 (отступы в docstring)
+    "D213", # Конфликтует с D212 (многострочные docstring)
+    "PLR0913", # Мы используем отдельную настройку для аргументов
+]
+
+[tool.ruff.lint.mccabe]
+# Правило Ц1: Цикломатическая сложность не более 10
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+# Правило Ф1: Длина функции не более 40 строк (логических инструкций)
+max-statements = 40
+# Правило А1: Количество аргументов функции не более 7
+max-args = 7
+
+[tool.ruff.lint.pydocstyle]
+# Требуем использовать docstring (тройные кавычки) вместо комментариев (Правило К1)
+convention = "google"
+
+[tool.ruff.format]
+# Автоматическое форматирование кода (аналог Black)
+quote-style = "double"
+indent-style = "space"
